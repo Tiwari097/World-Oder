@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="hi" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WORLD ORDER 1:1 - Global Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col">
+
+    <!-- App Container -->
+    <div id="app" class="flex-1 flex flex-col max-w-7xl w-full mx-auto p-4 gap-4">
+        
+        <!-- Header -->
+        <header class="glass rounded-xl p-4 flex justify-between items-center shadow-lg border-blue-500/20">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600 rounded-lg"><i data-lucide="Globe" class="w-6 h-6"></i></div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">WORLD ORDER 1:1</h1>
+                    <p class="text-xs text-slate-400">Global Geopolitical & Life Simulator Engine</p>
+                </div>
+            </div>
+            <div id="global-stats-bar" class="flex gap-6 text-sm font-semibold">
+                <div>Active Nodes: <span class="text-emerald-400">8 Regions</span></div>
+                <div>Global Clock: <span id="clock-display" class="text-amber-400">Year 2026, Day 1</span></div>
+                <button onclick="simulation.togglePause()" id="pause-btn" class="px-3 py-1 bg-amber-600/20 text-amber-400 rounded hover:bg-amber-600/30 border border-amber-500/30 text-xs">RESUME</button>
+            </div>
+        </header>
+
+        <!-- Main View Area -->
+        <main id="main-view" class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4">
+            <!-- Dynamic Content Injected Here -->
+        </main>
+    </div>
+
+    <script>
+        // Core Simulation Engine
+        const REGIONS = [
+            { id: 'EU', name: 'European Union', flag: '🇪🇺', gdp: 18000, stability: 85, aiPop: 450 },
+            { id: 'CHN', name: 'China', flag: '🇨🇳', gdp: 19000, stability: 90, aiPop: 1400 },
+            { id: 'RUS', name: 'Russia', flag: '🇷🇺', gdp: 2000, stability: 70, aiPop: 140 },
+            { id: 'IND', name: 'India', flag: '🇮🇳', gdp: 3500, stability: 80, aiPop: 1400 },
+            { id: 'ME', name: 'Middle East', flag: '🇸🇦', gdp: 4000, stability: 65, aiPop: 250 },
+            { id: 'SA', name: 'South Asia', flag: '🇵🇰', gdp: 1500, stability: 60, aiPop: 600 },
+            { id: 'AMER', name: 'Americas', flag: '🇺🇸', gdp: 28000, stability: 75, aiPop: 600 },
+            { id: 'AU', name: 'African Union', flag: '🇦🇫', gdp: 3000, stability: 65, aiPop: 1200 }
+        ];
+
+        class SimulationEngine {
+            constructor() {
+                this.day = 1;
+                this.year = 2026;
+                this.isPaused = false;
+                this.playerCharacter = null;
+                this.tickRate = 2000; // 2 seconds per day
+                this.timer = null;
+            }
+
+            init() {
+                this.renderRegionSelection();
+                this.startTicking();
+            }
+
+            startTicking() {
+                this.timer = setInterval(() => {
+                    if (!this.isPaused) this.tick();
+                }, this.tickRate);
+            }
+
+            togglePause() {
+                this.isPaused = !this.isPaused;
+                document.getElementById('pause-btn').innerText = this.isPaused ? "PAUSED" : "RESUME";
+                document.getElementById('pause-btn').className = this.isPaused ? 
+                    "px-3 py-1 bg-red-600/20 text-red-400 rounded border border-red-500/30 text-xs" :
+                    "px-3 py-1 bg-amber-600/20 text-amber-400 rounded border border-amber-500/30 text-xs";
+            }
+
+            tick() {
+                this.day++;
+                if (this.day > 365) {
+                    this.day = 1;
+                    this.year++;
+                }
+                document.getElementById('clock-display').innerText = `Year ${this.year}, Day ${this.day}`;
+                if (this.playerCharacter) {
+                    this.playerCharacter.ageInDays++;
+                    this.playerCharacter.wealth += Math.floor(Math.random() * 50) + 10;
+                    this.renderPlayerDashboard();
+                }
+            }
+
+            renderRegionSelection() {
+                const view = document.getElementById('main-view');
+                view.className = "flex-1 flex flex-col justify-center items-center text-center p-8 glass rounded-xl";
+                view.innerHTML = `
+                    <h2 class="text-3xl font-bold mb-2">SELECT YOUR GEOPOLITICAL ORIGIN</h2>
+                    <p class="text-slate-400 mb-8 max-w-xl">Choose your starting region. Each node processes real-time AI demographics, economic shifts, and political trajectories.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-4xl">
+                        ${REGIONS.map(r => `
+                            <div onclick="simulation.selectRegion('${r.id}')" class="p-4 bg-slate-900/80 hover:bg-blue-600/20 border border-slate-700 hover:border-blue-500 rounded-lg cursor-pointer transition flex flex-col items-center gap-2">
+                                <span class="text-4xl">${r.flag}</span>
+                                <h3 class="font-bold">${r.name}</h3>
+                                <span class="text-xs text-slate-400">GDP: $${r.gdp}T | Pop: ${r.aiPop}M</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            selectRegion(regionId) {
+                const reg = REGIONS.find(r => r.id === regionId);
+                const view = document.getElementById('main-view');
+                view.className = "flex-1 grid grid-cols-1 lg:grid-cols-4 gap-4";
+                view.innerHTML = `
+                    <div class="lg:col-span-3 glass rounded-xl p-6 flex flex-col justify-center items-center text-center">
+                        <span class="text-6xl mb-4">${reg.flag}</span>
+                        <h2 class="text-2xl font-bold mb-2">Welcome to ${reg.name}</h2>
+                        <p class="text-slate-400 mb-6">Define your background to begin your trajectory through corporate markets or state apparatus.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl text-left">
+                            <div onclick="simulation.createCharacter('${regionId}', 'UNDERPRIVILEGED')" class="p-4 bg-slate-900 border border-slate-700 hover:border-red-500 rounded cursor-pointer">
+                                <h4 class="font-bold text-red-400">Underprivileged</h4>
+                                <p class="text-xs text-slate-400 mt-1">High struggle, steep climb into grassroots politics or labor leadership.</p>
+                            </div>
+                            <div onclick="simulation.createCharacter('${regionId}', 'MIDDLE_CLASS')" class="p-4 bg-slate-900 border border-slate-700 hover:border-amber-500 rounded cursor-pointer">
+                                <h4 class="font-bold text-amber-400">Middle Class</h4>
+                                <p class="text-xs text-slate-400 mt-1">Standard education, viable path for corporate climbing or civil services.</p>
+                            </div>
+                            <div onclick="simulation.createCharacter('${regionId}', 'ELITE')" class="p-4 bg-slate-900 border border-slate-700 hover:border-emerald-500 rounded cursor-pointer">
+                                <h4 class="font-bold text-emerald-400">Elite / Oligarchy</h4>
+                                <p class="text-xs text-slate-400 mt-1">High initial capital, direct access to boardrooms and high-level lobbying.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+
+            createCharacter(regionId, background) {
+                const reg = REGIONS.find(r => r.id === regionId);
+                const wealthMap = { 'UNDERPRIVILEGED': 1000, 'MIDDLE_CLASS': 50000, 'ELITE': 1000000 };
+                const roleMap = { 'UNDERPRIVILEGED': 'Community Organizer', 'MIDDLE_CLASS': 'Junior Analyst', 'ELITE': 'Board Director' };
+                
+                this.playerCharacter = {
+                    region: reg.name,
+                    flag: reg.flag,
+                    background: background,
+                    role: roleMap[background],
+                    wealth: wealthMap[background],
+                    influence: background === 'ELITE' ? 50 : 10,
+                    ageInDays: 9500, // ~26 years old
+                    networkSize: 5
+                };
+                this.renderPlayerDashboard();
+            }
+
+            renderPlayerDashboard() {
+                if (!this.playerCharacter) return;
+                const view = document.getElementById('main-view');
+                view.className = "flex-1 grid grid-cols-1 md:grid-cols-4 gap-4";
+                view.innerHTML = `
+                    <div class="glass rounded-xl p-4 flex flex-col gap-4">
+                        <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+                            <span class="text-3xl">${this.playerCharacter.flag}</span>
+                            <div>
+                                <h3 class="font-bold text-lg">Citizen Lead</h3>
+                                <p class="text-xs text-blue-400">${this.playerCharacter.region}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Net Worth:</span>
+                                <span class="font-bold text-emerald-400">$${this.playerCharacter.wealth.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Current Role:</span>
+                                <span class="font-semibold">${this.playerCharacter.role}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Influence:</span>
+                                <span class="font-semibold text-purple-400">${this.playerCharacter.influence} pts</span>
+                            </div>
+                        </div>
+                        <div class="mt-auto pt-4 border-t border-slate-800">
+                            <button onclick="simulation.executeAction('LOBBY')" class="w-full py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold text-xs transition">LOBBY / NETWORK</button>
+                        </div>
+                    </div>
+                    <div class="md:col-span-3 glass rounded-xl p-6 flex flex-col gap-4">
+                        <h3 class="text-xl font-bold border-b border-slate-800 pb-3">Real-Time Trajectory Log</h3>
+                        <div id="feed" class="flex-1 overflow-y-auto space-y-3 text-sm">
+                            <div class="p-3 bg-slate-900/60 rounded border border-slate-800 flex items-start gap-3">
+                                <i data-lucide="Zap" class="w-5 h-5 text-amber-400 shrink-0"></i>
+                                <div>
+                                    <p class="font-semibold">Career Initialization</p>
+                                    <p class="text-xs text-slate-400 mt-1">You have entered the socio-economic matrix of ${this.playerCharacter.region} as a ${this.playerCharacter.role}.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+
+            executeAction(actionType) {
+                const feed = document.getElementById('feed');
+                const log = document.createElement('div');
+                log.className = "p-3 bg-slate-900/60 rounded border border-slate-800 flex items-start gap-3 animate-fade-in";
+                
+                if (actionType === 'LOBBY') {
+                    this.playerCharacter.influence += 5;
+                    this.playerCharacter.wealth -= 1000;
+                    log.innerHTML = `
+                        <i data-lucide="Users" class="w-5 h-5 text-blue-400 shrink-0"></i>
+                        <div>
+                            <p class="font-semibold">Lobbying Operation Executed</p>
+                            <p class="text-xs text-slate-400 mt-1">Allocated resources to expand political network. Influence increased to ${this.playerCharacter.influence}.</p>
+                        </div>
+                    `;
+                }
+                feed.prepend(log);
+                this.renderPlayerDashboard();
+                setTimeout(() => lucide.createIcons(), 100);
+            }
+        }
+
+        const simulation = new SimulationEngine();
+        window.onload = () => simulation.init();
+    </script>
+</body>
+</html>
+
+
